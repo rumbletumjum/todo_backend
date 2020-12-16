@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -14,78 +13,54 @@ type Todo struct {
 	Completed bool   `json:"completed"`
 }
 
-type TodoService interface {
-	GetAll() ([]*Todo, error)
-	Save(todo *Todo) error
-}
-
 type InMemoryTodoService struct {
-	mu     sync.Mutex
+	sync.Mutex
 	nextId int
 	Todos  []*Todo
 }
 
 func NewTodoService() *InMemoryTodoService {
 	s := new(InMemoryTodoService)
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.Lock()
+	defer s.Unlock()
 	s.Todos = make([]*Todo, 0)
 	s.nextId = 1
 	return s
 }
 
-func (s *InMemoryTodoService) GetAll() ([]*Todo, error) {
-	return s.Todos, nil
-}
-
-func (s *InMemoryTodoService) Save(todo *Todo) error {
-	if todo.ID == 0 {
-		s.mu.Lock()
-		defer s.mu.Unlock()
-		todo.ID = s.nextId
-		s.nextId++
-
-		s.Todos = append(s.Todos, todo)
-		return nil
-	}
-
-	return fmt.Errorf("Unable to save")
-}
-
-var TodoSvc TodoService
-
-func getHandler(w http.ResponseWriter, r *http.Request) {
-	todos, err := TodoSvc.GetAll()
-	err = json.NewEncoder(w).Encode(todos)
+func (s *InMemoryTodoService) getAll(w http.ResponseWriter, r *http.Request) {
+	log.Printf("getAll: %v", r)
+	err := json.NewEncoder(w).Encode(s.Todos)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 	}
 }
 
-func saveHandler(w http.ResponseWriter, r *http.Request) {
+func (s *InMemoryTodoService) save(w http.ResponseWriter, r *http.Request) {
+	log.Printf("save: %v", r)
 	var todo Todo
 	err := json.NewDecoder(r.Body).Decode(&todo)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
+	if todo.ID == 0 {
+		s.Lock()
+		defer s.Unlock()
+		todo.ID = s.nextId
+		s.nextId++
 
-	err = TodoSvc.Save(&todo)
+		s.Todos = append(s.Todos, &todo)
+	}
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 	}
 }
 
 func main() {
-	TodoSvc = NewTodoService()
+	svc := NewTodoService()
 
-	testTodo := &Todo{
-		ID:        0,
-		Title:     "Finish ToDo app",
-		Completed: false,
-	}
-	TodoSvc.Save(testTodo)
-	http.HandleFunc("/todos", getHandler)
-	http.HandleFunc("/todo", saveHandler)
+	http.HandleFunc("/todos", svc.getAll)
+	http.HandleFunc("/todo", svc.save)
 	log.Fatal(http.ListenAndServe(":8888", nil))
 }
