@@ -8,17 +8,6 @@ import (
 	"sync"
 )
 
-type response struct {
-	Page   int      `json:"page"`
-	Fruits []string `json:"fruits"`
-}
-
-type UserResponse struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
 type Todo struct {
 	ID        int    `json:"id"`
 	Title     string `json:"title"`
