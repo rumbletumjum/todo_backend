@@ -57,10 +57,18 @@ func (s *InMemoryTodoService) save(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *InMemoryTodoService) handle(w http.ResponseWriter, r *http.Request) {
+    switch r.Method {
+    case "GET":
+        s.getAll(w, r)
+    case "POST":
+        s.save(w, r)
+    }
+}
+
 func main() {
 	svc := NewTodoService()
 
-	http.HandleFunc("/todos", svc.getAll)
-	http.HandleFunc("/todo", svc.save)
+	http.HandleFunc("/todo", svc.handle)
 	log.Fatal(http.ListenAndServe(":8888", nil))
 }
