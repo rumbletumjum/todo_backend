@@ -38,7 +38,7 @@ func (server *TodoServer) newTodo(w http.ResponseWriter, req *http.Request) {
 	var reqTodo RequestTodo
 	err := json.NewDecoder(req.Body).Decode(&reqTodo)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -53,9 +53,9 @@ func (server *TodoServer) newTodo(w http.ResponseWriter, req *http.Request) {
 
 func (server *TodoServer) handle(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
-	case "GET":
+	case http.MethodGet:
 		server.getAllTodos(w, req)
-	case "POST":
+	case http.MethodPost:
 		server.newTodo(w, req)
 	}
 }
