@@ -43,7 +43,7 @@ func (s *InMemoryTodoStore) save(todo *Todo) error {
 	return fmt.Errorf("unable to save")
 }
 
-func NewTodoStore() *InMemoryTodoStore {
+func NewInMemoryTodoStore() *InMemoryTodoStore {
 	s := new(InMemoryTodoStore)
 	s.Lock()
 	defer s.Unlock()
@@ -89,7 +89,7 @@ func (srv *TodoServer) handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	srv := TodoServer{store: NewTodoStore()}
+	srv := TodoServer{store: NewInMemoryTodoStore()}
 
 	http.HandleFunc("/todo", srv.handle)
 	log.Fatal(http.ListenAndServe(":8888", nil))
