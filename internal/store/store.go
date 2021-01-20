@@ -3,34 +3,48 @@ package store
 import (
 	"fmt"
 	"log"
-	"rkb/todo_backend/internal/todo"
 	"sync"
 )
 
+type Todo struct {
+	ID        int    `json:"id"`
+	Title     string `json:"title"`
+	Completed bool   `json:"completed"`
+}
+
 type TodoStore interface {
-	GetAll() ([]*todo.Todo, error)
-	Save(todo *todo.Todo) error
+	GetAll() []Todo
+	NewTodo(todo *Todo) error
 }
 
 type InMemoryTodoStore struct {
 	sync.Mutex
 	nextId int
-	Todos  []*todo.Todo
+	Todos  map[int]Todo
 }
 
-func (s *InMemoryTodoStore) GetAll() ([]*todo.Todo, error) {
+func (s *InMemoryTodoStore) GetAll() []Todo {
 	log.Printf("store: GetAll")
-	return s.Todos, nil
-}
-
-func (s *InMemoryTodoStore) Save(todo *todo.Todo) error {
-	log.Printf("store: Save %v", todo)
 	s.Lock()
 	defer s.Unlock()
+
+	allTodos := make([]Todo, 0, len(s.Todos))
+	for _, todo := range s.Todos {
+		allTodos = append(allTodos, todo)
+	}
+	return allTodos
+
+}
+
+func (s *InMemoryTodoStore) NewTodo(todo *Todo) error {
+	log.Printf("store: NewTodo %v", todo)
+	s.Lock()
+	defer s.Unlock()
+
 	if todo.ID == 0 {
 		todo.ID = s.nextId
 		s.nextId++
-		s.Todos = append(s.Todos, todo)
+		s.Todos[todo.ID] = *todo
 		return nil
 	}
 	return fmt.Errorf("unable to Save")
@@ -40,7 +54,7 @@ func NewInMemoryTodoStore() *InMemoryTodoStore {
 	s := new(InMemoryTodoStore)
 	s.Lock()
 	defer s.Unlock()
-	s.Todos = make([]*todo.Todo, 0)
+	s.Todos = make(map[int]Todo)
 	s.nextId = 1
 	return s
 }
