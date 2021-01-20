@@ -17,6 +17,14 @@ func NewTodoServer() *TodoServer {
 	return &TodoServer{store: store}
 }
 
+func renderJSON(w http.ResponseWriter, v interface{}) {
+	res, err := json.Marshal(v)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	w.Write(res)
+}
+
 func (server *TodoServer) getAllTodos(w http.ResponseWriter, req *http.Request) {
 	todos := server.store.GetAllTodos()
 	res, err := json.Marshal(todos)
