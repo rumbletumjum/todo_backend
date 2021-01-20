@@ -14,24 +14,24 @@ type Todo struct {
 	Completed bool   `json:"completed"`
 }
 
-type TodoService interface {
+type TodoStore interface {
 	getAll() ([]*Todo, error)
 	save(todo *Todo) error
 }
 
-type InMemoryTodoService struct {
+type InMemoryTodoStore struct {
 	sync.Mutex
 	nextId int
 	Todos  []*Todo
 }
 
-func (s *InMemoryTodoService) getAll() ([]*Todo, error) {
-	log.Printf("svc: getAll")
+func (s *InMemoryTodoStore) getAll() ([]*Todo, error) {
+	log.Printf("store: getAll")
 	return s.Todos, nil
 }
 
-func (s *InMemoryTodoService) save(todo *Todo) error {
-	log.Printf("svc: save %v", todo)
+func (s *InMemoryTodoStore) save(todo *Todo) error {
+	log.Printf("store: save %v", todo)
 	s.Lock()
 	defer s.Unlock()
 	if todo.ID == 0 {
@@ -43,8 +43,8 @@ func (s *InMemoryTodoService) save(todo *Todo) error {
 	return fmt.Errorf("unable to save")
 }
 
-func NewTodoService() *InMemoryTodoService {
-	s := new(InMemoryTodoService)
+func NewTodoStore() *InMemoryTodoStore {
+	s := new(InMemoryTodoStore)
 	s.Lock()
 	defer s.Unlock()
 	s.Todos = make([]*Todo, 0)
@@ -53,12 +53,12 @@ func NewTodoService() *InMemoryTodoService {
 }
 
 type TodoServer struct {
-	svc TodoService
+	store TodoStore
 }
 
 func (srv *TodoServer) getAll(w http.ResponseWriter, r *http.Request) {
 	log.Printf("getAll: %v", r)
-	todos, err := srv.svc.getAll()
+	todos, err := srv.store.getAll()
 	err = json.NewEncoder(w).Encode(todos)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -73,7 +73,7 @@ func (srv *TodoServer) save(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	err = srv.svc.save(&todo)
+	err = srv.store.save(&todo)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 	}
@@ -89,7 +89,7 @@ func (srv *TodoServer) handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	srv := TodoServer{svc: NewTodoService()}
+	srv := TodoServer{store: NewTodoStore()}
 
 	http.HandleFunc("/todo", srv.handle)
 	log.Fatal(http.ListenAndServe(":8888", nil))
