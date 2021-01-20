@@ -8,12 +8,13 @@ import (
 	"rkb/todo_backend/internal/todo"
 )
 
-
-
-
-
 type TodoServer struct {
 	store store.TodoStore
+}
+
+func NewTodoServer() *TodoServer {
+	store := store.NewInMemoryTodoStore()
+	return &TodoServer{store: store}
 }
 
 func (srv *TodoServer) getAll(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +50,7 @@ func (srv *TodoServer) handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	srv := TodoServer{store: store.NewInMemoryTodoStore()}
+	srv := NewTodoServer()
 
 	http.HandleFunc("/todo", srv.handle)
 	log.Fatal(http.ListenAndServe(":8888", nil))
