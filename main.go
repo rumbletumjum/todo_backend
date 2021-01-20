@@ -17,35 +17,35 @@ func NewTodoServer() *TodoServer {
 	return &TodoServer{store: store}
 }
 
-func (srv *TodoServer) getAll(w http.ResponseWriter, r *http.Request) {
-	log.Printf("getAll: %v", r)
-	todos, err := srv.store.GetAll()
+func (server *TodoServer) getAll(w http.ResponseWriter, req *http.Request) {
+	log.Printf("getAll: %v", req)
+	todos, err := server.store.GetAll()
 	err = json.NewEncoder(w).Encode(todos)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 	}
 }
 
-func (srv *TodoServer) save(w http.ResponseWriter, r *http.Request) {
-	log.Printf("save: %v", r)
+func (server *TodoServer) save(w http.ResponseWriter, req *http.Request) {
+	log.Printf("save: %v", req)
 	var todo todo.Todo
-	err := json.NewDecoder(r.Body).Decode(&todo)
+	err := json.NewDecoder(req.Body).Decode(&todo)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	err = srv.store.Save(&todo)
+	err = server.store.Save(&todo)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 	}
 }
 
-func (srv *TodoServer) handle(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
+func (server *TodoServer) handle(w http.ResponseWriter, req *http.Request) {
+	switch req.Method {
 	case "GET":
-		srv.getAll(w, r)
+		server.getAll(w, req)
 	case "POST":
-		srv.save(w, r)
+		server.save(w, req)
 	}
 }
 
