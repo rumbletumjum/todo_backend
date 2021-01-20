@@ -28,11 +28,7 @@ func renderJSON(w http.ResponseWriter, v interface{}) {
 
 func (server *TodoServer) getAllTodos(w http.ResponseWriter, req *http.Request) {
 	todos := server.store.GetAllTodos()
-	res, err := json.Marshal(todos)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-	}
-	w.Write(res)
+	renderJSON(w, todos)
 }
 
 func (server *TodoServer) newTodo(w http.ResponseWriter, req *http.Request) {
@@ -53,11 +49,7 @@ func (server *TodoServer) newTodo(w http.ResponseWriter, req *http.Request) {
 
 	id := server.store.NewTodo(reqTodo.Title)
 	responseStruct := ResponseId{id}
-	res, err := json.Marshal(responseStruct)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	w.Write(res)
+	renderJSON(w, responseStruct)
 }
 
 func (server *TodoServer) handle(w http.ResponseWriter, req *http.Request) {
