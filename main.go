@@ -19,7 +19,7 @@ func NewTodoServer() *TodoServer {
 func (server *TodoServer) getAllTodos(w http.ResponseWriter, req *http.Request) {
 	log.Printf("getAll: %v", req)
 
-	todos := server.store.GetAll()
+	todos := server.store.GetAllTodos()
 	err := json.NewEncoder(w).Encode(todos)
 	if err != nil {
 		http.Error(w, err.Error(), 500)

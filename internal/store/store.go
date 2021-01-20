@@ -13,7 +13,7 @@ type Todo struct {
 }
 
 type TodoStore interface {
-	GetAll() []Todo
+	GetAllTodos() []Todo
 	NewTodo(todo *Todo) error
 }
 
@@ -23,7 +23,7 @@ type InMemoryTodoStore struct {
 	Todos  map[int]Todo
 }
 
-func (s *InMemoryTodoStore) GetAll() []Todo {
+func (s *InMemoryTodoStore) GetAllTodos() []Todo {
 	log.Printf("store: GetAll")
 	s.Lock()
 	defer s.Unlock()
@@ -33,7 +33,6 @@ func (s *InMemoryTodoStore) GetAll() []Todo {
 		allTodos = append(allTodos, todo)
 	}
 	return allTodos
-
 }
 
 func (s *InMemoryTodoStore) NewTodo(todo *Todo) error {
