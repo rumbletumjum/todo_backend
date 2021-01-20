@@ -50,8 +50,9 @@ func (srv *TodoServer) handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	srv := NewTodoServer()
+	mux := http.NewServeMux()
+	server := NewTodoServer()
 
-	http.HandleFunc("/todo", srv.handle)
+	mux.HandleFunc("/todo", server.handle)
 	log.Fatal(http.ListenAndServe(":8888", nil))
 }
