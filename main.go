@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"rkb/todo_backend/internal/store"
 )
 
@@ -17,28 +18,37 @@ func NewTodoServer() *TodoServer {
 }
 
 func (server *TodoServer) getAllTodos(w http.ResponseWriter, req *http.Request) {
-	log.Printf("getAll: %v", req)
-
 	todos := server.store.GetAllTodos()
-	err := json.NewEncoder(w).Encode(todos)
+	res, err := json.Marshal(todos)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 	}
+	w.Write(res)
 }
 
 func (server *TodoServer) newTodo(w http.ResponseWriter, req *http.Request) {
-	log.Printf("save: %v", req)
+	type RequestTodo struct {
+		Title string `json:"title"`
+	}
 
-	var todo store.Todo
-	err := json.NewDecoder(req.Body).Decode(&todo)
+	type ResponseId struct {
+		Id int `json:"id"`
+	}
+
+	var reqTodo RequestTodo
+	err := json.NewDecoder(req.Body).Decode(&reqTodo)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	err = server.store.NewTodo(&todo)
+
+	id := server.store.NewTodo(reqTodo.Title)
+	responseStruct := ResponseId{id}
+	res, err := json.Marshal(responseStruct)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	w.Write(res)
 }
 
 func (server *TodoServer) handle(w http.ResponseWriter, req *http.Request) {
@@ -55,5 +65,11 @@ func main() {
 	server := NewTodoServer()
 
 	mux.HandleFunc("/todo", server.handle)
-	log.Fatal(http.ListenAndServe(":8888", nil))
+
+	port, ok := os.LookupEnv("SERVEPORT")
+	if !ok {
+		port = "8888"
+	}
+	log.Println("Listening on " + port + "...")
+	log.Fatal(http.ListenAndServe(":"+port, mux))
 }

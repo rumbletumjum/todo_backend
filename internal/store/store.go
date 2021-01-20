@@ -1,7 +1,6 @@
 package store
 
 import (
-	"fmt"
 	"log"
 	"sync"
 )
@@ -14,7 +13,7 @@ type Todo struct {
 
 type TodoStore interface {
 	GetAllTodos() []Todo
-	NewTodo(todo *Todo) error
+	NewTodo(title string) int
 }
 
 type InMemoryTodoStore struct {
@@ -35,18 +34,19 @@ func (s *InMemoryTodoStore) GetAllTodos() []Todo {
 	return allTodos
 }
 
-func (s *InMemoryTodoStore) NewTodo(todo *Todo) error {
-	log.Printf("store: NewTodo %v", todo)
+func (s *InMemoryTodoStore) NewTodo(title string) int {
 	s.Lock()
 	defer s.Unlock()
 
-	if todo.ID == 0 {
-		todo.ID = s.nextId
-		s.nextId++
-		s.Todos[todo.ID] = *todo
-		return nil
+	todo := Todo{
+		ID:        s.nextId,
+		Title:     title,
+		Completed: false,
 	}
-	return fmt.Errorf("unable to Save")
+
+	s.Todos[s.nextId] = todo
+	s.nextId++
+	return todo.ID
 }
 
 func NewInMemoryTodoStore() *InMemoryTodoStore {
